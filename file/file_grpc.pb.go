@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type FileClient interface {
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (File_GetClient, error)
 	TransferToRemote(ctx context.Context, in *TransferToRemoteRequest, opts ...grpc.CallOption) (*TransferToRemoteResponse, error)
+	TransferFromRemote(ctx context.Context, in *TransferFromRemoteRequest, opts ...grpc.CallOption) (*TransferFromRemoteResponse, error)
 	Put(ctx context.Context, opts ...grpc.CallOption) (File_PutClient, error)
 	Stat(ctx context.Context, in *StatRequest, opts ...grpc.CallOption) (*StatResponse, error)
 	Remove(ctx context.Context, in *RemoveRequest, opts ...grpc.CallOption) (*RemoveResponse, error)
@@ -72,6 +73,15 @@ func (x *fileGetClient) Recv() (*GetResponse, error) {
 func (c *fileClient) TransferToRemote(ctx context.Context, in *TransferToRemoteRequest, opts ...grpc.CallOption) (*TransferToRemoteResponse, error) {
 	out := new(TransferToRemoteResponse)
 	err := c.cc.Invoke(ctx, "/gnoi.file.File/TransferToRemote", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *fileClient) TransferFromRemote(ctx context.Context, in *TransferFromRemoteRequest, opts ...grpc.CallOption) (*TransferFromRemoteResponse, error) {
+	out := new(TransferFromRemoteResponse)
+	err := c.cc.Invoke(ctx, "/gnoi.file.File/TransferFromRemote", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -136,6 +146,7 @@ func (c *fileClient) Remove(ctx context.Context, in *RemoveRequest, opts ...grpc
 type FileServer interface {
 	Get(*GetRequest, File_GetServer) error
 	TransferToRemote(context.Context, *TransferToRemoteRequest) (*TransferToRemoteResponse, error)
+	TransferFromRemote(context.Context, *TransferFromRemoteRequest) (*TransferFromRemoteResponse, error)
 	Put(File_PutServer) error
 	Stat(context.Context, *StatRequest) (*StatResponse, error)
 	Remove(context.Context, *RemoveRequest) (*RemoveResponse, error)
@@ -151,6 +162,9 @@ func (UnimplementedFileServer) Get(*GetRequest, File_GetServer) error {
 }
 func (UnimplementedFileServer) TransferToRemote(context.Context, *TransferToRemoteRequest) (*TransferToRemoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TransferToRemote not implemented")
+}
+func (UnimplementedFileServer) TransferFromRemote(context.Context, *TransferFromRemoteRequest) (*TransferFromRemoteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TransferFromRemote not implemented")
 }
 func (UnimplementedFileServer) Put(File_PutServer) error {
 	return status.Errorf(codes.Unimplemented, "method Put not implemented")
@@ -209,6 +223,24 @@ func _File_TransferToRemote_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FileServer).TransferToRemote(ctx, req.(*TransferToRemoteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _File_TransferFromRemote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TransferFromRemoteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileServer).TransferFromRemote(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gnoi.file.File/TransferFromRemote",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileServer).TransferFromRemote(ctx, req.(*TransferFromRemoteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -285,6 +317,10 @@ var File_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TransferToRemote",
 			Handler:    _File_TransferToRemote_Handler,
+		},
+		{
+			MethodName: "TransferFromRemote",
+			Handler:    _File_TransferFromRemote_Handler,
 		},
 		{
 			MethodName: "Stat",
